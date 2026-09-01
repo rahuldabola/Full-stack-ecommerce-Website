@@ -3496,3 +3496,108 @@ footer {
 .showcase.search-hidden { display: none !important; }
 
 .btn-action ion-icon[name="heart"] { color: var(--bittersweet); }
+
+/**
+ * #ACCOUNT PANEL
+ */
+
+.auth-form { display: flex; flex-direction: column; }
+
+.auth-field {
+  font-size: var(--fs-7);
+  padding: 10px 16px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--cultured);
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-error {
+  color: var(--bittersweet);
+  font-size: var(--fs-8);
+  margin-bottom: 14px;
+  display: none;
+}
+
+.auth-error.show { display: block; }
+
+.auth-switch {
+  text-align: center;
+  font-size: var(--fs-8);
+  color: var(--sonic-silver);
+  margin-top: 16px;
+}
+
+.auth-switch button {
+  color: var(--eerie-black);
+  text-decoration: underline;
+  font-weight: var(--weight-500);
+}
+
+.account-info {
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--cultured);
+}
+
+.account-info-name {
+  font-size: var(--fs-4);
+  color: var(--eerie-black);
+  margin-bottom: 4px;
+}
+
+.account-info-email {
+  font-size: var(--fs-8);
+  color: var(--sonic-silver);
+  margin-bottom: 15px;
+}
+
+.btn-logout {
+  width: 100%;
+  background: var(--white);
+  color: var(--eerie-black);
+  border: 1px solid var(--cultured);
+  padding: 10px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--fs-8);
+}
+
+.account-orders-title {
+  font-size: var(--fs-6);
+  color: var(--eerie-black);
+  margin-bottom: 12px;
+}
+
+.order-card {
+  border: 1px solid var(--cultured);
+  border-radius: var(--border-radius-sm);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-8);
+  color: var(--sonic-silver);
+  margin-bottom: 8px;
+}
+
+.order-card-item {
+  font-size: var(--fs-8);
+  color: var(--eerie-black);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.order-card-total {
+  font-size: var(--fs-7);
+  color: var(--eerie-black);
+  font-weight: var(--weight-500);
+  text-align: right;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cultured);
+}

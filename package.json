@@ -1,0 +1,19 @@
+{
+  "name": "anon-ecommerce",
+  "version": "1.0.0",
+  "description": "Anon - a full-stack eCommerce site with accounts, cart, wishlist, and orders",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "seed": "node server/seed.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "cheerio": "^1.0.0"
+  }
+}
