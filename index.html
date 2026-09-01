@@ -52,7 +52,7 @@
 
       <div class="newsletter">
 
-        <form action="#">
+        <form action="#" data-newsletter-form>
 
           <div class="newsletter-header">
 
@@ -107,6 +107,104 @@
       <p class="toast-meta">
         <time datetime="PT2M">2 Minutes</time> ago
       </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!--
+    - FEEDBACK TOAST
+  -->
+
+  <div class="feedback-toast" data-feedback-toast></div>
+
+
+
+  <!--
+    - CART PANEL
+  -->
+
+  <div class="side-panel" data-cart-panel>
+
+    <div class="side-panel-overlay" data-cart-overlay></div>
+
+    <div class="side-panel-content">
+
+      <div class="side-panel-header">
+        <h3>Shopping Cart</h3>
+        <button class="side-panel-close-btn" data-cart-close>
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="side-panel-body" data-cart-body>
+        <p class="side-panel-empty-msg" data-cart-empty>Your cart is empty.</p>
+      </div>
+
+      <div class="side-panel-footer">
+        <div class="side-panel-subtotal-row">
+          <span>Subtotal</span>
+          <span data-cart-subtotal>$0.00</span>
+        </div>
+        <button class="btn-checkout" data-cart-checkout disabled>Checkout</button>
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!--
+    - WISHLIST PANEL
+  -->
+
+  <div class="side-panel" data-wishlist-panel>
+
+    <div class="side-panel-overlay" data-wishlist-overlay></div>
+
+    <div class="side-panel-content">
+
+      <div class="side-panel-header">
+        <h3>Wishlist</h3>
+        <button class="side-panel-close-btn" data-wishlist-close>
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="side-panel-body" data-wishlist-body>
+        <p class="side-panel-empty-msg" data-wishlist-empty>Your wishlist is empty.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!--
+    - QUICK VIEW MODAL
+  -->
+
+  <div class="quickview-modal" data-quickview-modal>
+
+    <div class="quickview-overlay" data-quickview-overlay></div>
+
+    <div class="quickview-content">
+
+      <button class="quickview-close-btn" data-quickview-close>
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+
+      <img data-quickview-img src="" alt="" class="quickview-img">
+
+      <div class="quickview-details">
+        <h3 data-quickview-title></h3>
+        <p class="price" data-quickview-price></p>
+        <button class="btn-newsletter" data-quickview-add>Add to cart</button>
+      </div>
 
     </div>
 
