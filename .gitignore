@@ -2,3 +2,4 @@ node_modules/
 store.db
 store.db-*
 *.log
+.env

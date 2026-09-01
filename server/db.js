@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS orders (
   user_id INTEGER NOT NULL,
   total REAL NOT NULL,
   status TEXT DEFAULT 'placed',
+  stripe_session_id TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -79,5 +80,14 @@ CREATE TABLE IF NOT EXISTS order_items (
   FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 `);
+
+// orders created before Stripe was added won't have this column yet
+try {
+  db.exec('ALTER TABLE orders ADD COLUMN stripe_session_id TEXT');
+} catch (err) {
+  if (!/duplicate column/i.test(err.message)) throw err;
+}
+
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_stripe_session ON orders(stripe_session_id)');
 
 module.exports = db;

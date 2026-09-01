@@ -280,16 +280,40 @@ cartCheckoutBtn.addEventListener('click', async function () {
     return;
   }
   if (cartCache.length === 0) return;
+
+  cartCheckoutBtn.setAttribute('disabled', '');
   try {
-    await api('/api/orders', { method: 'POST' });
-    cartCache = [];
-    renderCart();
-    closeCartPanel();
-    showFeedback('Order placed! Thank you for shopping with Anon.');
+    const data = await api('/api/checkout/create-session', { method: 'POST' });
+    window.location.href = data.url;
   } catch (e) {
+    cartCheckoutBtn.removeAttribute('disabled');
     showFeedback(e.message);
   }
 });
+
+async function handleCheckoutRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const checkout = params.get('checkout');
+  if (!checkout) return;
+
+  if (checkout === 'success') {
+    const sessionId = params.get('session_id');
+    try {
+      await api('/api/checkout/confirm?session_id=' + encodeURIComponent(sessionId));
+      showFeedback('Payment successful! Thank you for shopping with Anon.');
+      await Promise.all([loadCart(), loadWishlist()]);
+    } catch (e) {
+      showFeedback(e.message);
+    }
+  } else if (checkout === 'cancel') {
+    showFeedback('Checkout was cancelled — your cart is still here.');
+  }
+
+  params.delete('checkout');
+  params.delete('session_id');
+  const query = params.toString();
+  window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : ''));
+}
 
 // ---- wishlist ----
 
@@ -611,7 +635,7 @@ async function initAuth() {
   await Promise.all([loadCart(), loadWishlist()]);
 }
 
-initAuth();
+initAuth().then(handleCheckoutRedirect);
 
 // ---- search ----
 

@@ -1,7 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const Stripe = require('stripe');
 const db = require('./db');
 const { hashPassword, verifyPassword, createSession, destroySession, requireAuth } = require('./auth');
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 const app = express();
 app.use(express.json());
@@ -134,27 +138,96 @@ app.delete('/api/wishlist/:productId', requireAuth, (req, res) => {
   res.json(getWishlist(req.user.id));
 });
 
-// ---- orders ----
+// ---- orders / checkout (Stripe) ----
 
-app.post('/api/orders', requireAuth, (req, res) => {
-  const items = getCart(req.user.id);
-  if (!items.length) return res.status(400).json({ error: 'Your cart is empty.' });
+function placeOrderFromCart(userId, stripeSessionId) {
+  const items = getCart(userId);
+  if (!items.length) return null;
 
   const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const placeOrder = db.transaction(() => {
-    const orderInfo = db.prepare('INSERT INTO orders (user_id, total) VALUES (?, ?)').run(req.user.id, total);
+    const orderInfo = db.prepare('INSERT INTO orders (user_id, total, status, stripe_session_id) VALUES (?, ?, ?, ?)')
+      .run(userId, total, 'paid', stripeSessionId);
     const orderId = orderInfo.lastInsertRowid;
     const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, name, price, qty) VALUES (?, ?, ?, ?, ?)');
     items.forEach((item) => insertItem.run(orderId, item.id, item.name, item.price, item.qty));
-    db.prepare('DELETE FROM cart_items WHERE user_id = ?').run(req.user.id);
+    db.prepare('DELETE FROM cart_items WHERE user_id = ?').run(userId);
     return orderId;
   });
 
   const orderId = placeOrder();
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   const orderItems = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
-  res.json({ ...order, items: orderItems });
+  return { ...order, items: orderItems };
+}
+
+app.post('/api/checkout/create-session', requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(500).json({ error: 'Payments are not configured on this server. Set STRIPE_SECRET_KEY in .env.' });
+  }
+
+  const items = getCart(req.user.id);
+  if (!items.length) return res.status(400).json({ error: 'Your cart is empty.' });
+
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: req.user.email,
+      line_items: items.map((item) => ({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: item.name },
+          unit_amount: Math.round(item.price * 100),
+        },
+        quantity: item.qty,
+      })),
+      success_url: `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/?checkout=cancel`,
+      metadata: { user_id: String(req.user.id) },
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not start checkout: ' + err.message });
+  }
+});
+
+app.get('/api/checkout/confirm', requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(500).json({ error: 'Payments are not configured on this server.' });
+  }
+
+  const sessionId = req.query.session_id;
+  if (!sessionId) return res.status(400).json({ error: 'Missing session_id.' });
+
+  const existingOrder = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(sessionId);
+  if (existingOrder) {
+    const orderItems = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(existingOrder.id);
+    return res.json({ ...existingOrder, items: orderItems });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ error: 'Payment was not completed.' });
+    }
+    if (String(session.metadata.user_id) !== String(req.user.id)) {
+      return res.status(403).json({ error: 'This checkout session does not belong to you.' });
+    }
+
+    const order = placeOrderFromCart(req.user.id, sessionId);
+    if (!order) return res.status(400).json({ error: 'Nothing left to confirm — cart was already checked out.' });
+
+    res.json(order);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not confirm payment: ' + err.message });
+  }
 });
 
 app.get('/api/orders', requireAuth, (req, res) => {
@@ -167,4 +240,7 @@ app.get('/api/orders', requireAuth, (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Anon eCommerce running at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Anon eCommerce running at http://localhost:${PORT}`);
+  if (!stripe) console.log('Note: STRIPE_SECRET_KEY is not set — checkout will be disabled until it is.');
+});
